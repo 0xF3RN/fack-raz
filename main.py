@@ -6,7 +6,7 @@ import requests
 url = "https://ruz.mstuca.ru/api/schedule/group/"
 # это хардкод детка
 group_id = 623
-start_date = "2024.09.09"
+start_date = "2024.11.09"
 end_date = "2025.01.31"
 
 duration = 1.5
@@ -17,8 +17,10 @@ lab = "Лабораторные работы"
 finals = ["Зачет с оценкой", "Зачеты"]
 
 # сделать через класс, ладно похуй функции я ебал эти классы в 3 утра
+lab_calendar = Calendar()
+prac_lec_calendar = Calendar()
+exams_calendar = Calendar()
 calendar = Calendar()
-
 
 def get_data(start,end):
     params = {
@@ -26,7 +28,9 @@ def get_data(start,end):
         "finish": end,
         "ing": 1 # в душе не ебу что это но в прайват апи было так
     }
+    print("-"*1000)
     request = requests.get(url+str(group_id), params=params)
+    print("-"*1000)
     if request.status_code == 200:
         #print(request.json())
         return request.json()
@@ -52,24 +56,33 @@ def parse_data(data):
         endLesson = beginLesson + timedelta(hours=duration) 
 
         event = Event()
-        event.name = f"{discipline}; {kindOfWork}; {shortName}"
+        event.name = f"{kindOfWork}; {discipline}; {shortName}"
         event.begin = beginLesson
         event.end = endLesson
         #хуй его знает что писать, но пусть будет, после "прод" тестов мб поменяю
         event.description = f"Здание: {building}\nТип занятия: {kindOfWork}\nПолное имя препода: {fullName}\nПоток: {stream}"
         event.location = auditorium
         calendar.events.add(event)
-        print(f"Added {discipline}; {kindOfWork}; {shortName}")
-        
-
+        if kindOfWork == lab:
+            lab_calendar.events.add(event)
+            print(f"Added {discipline}; {kindOfWork}; {shortName}")
+        elif kindOfWork == (practice or lecture):
+             prac_lec_calendar.events.add(event)
+             print(f"Added {discipline}; {kindOfWork}; {shortName}")
+        else:
+             exams_calendar.events.add(event)
 
 def main():
     data = get_data(start_date, end_date)
     parse_data(data)
     with open("all_in_one.ics", "w") as file:
-            file.writelines(calendar)
-
+        file.writelines(calendar)
+    with open("lab.ics", "w") as file:
+        file.writelines(lab_calendar)
+    with open("prac_lec.ics", "w") as file:
+        file.writelines(prac_lec_calendar)
+    with open("exams.ics", "w") as file:
+        file.writelines(exams_calendar)
 
 if __name__ == "__main__":
     main()
-
