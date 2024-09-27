@@ -28,9 +28,7 @@ def get_data(start,end):
         "finish": end,
         "ing": 1 # в душе не ебу что это но в прайват апи было так
     }
-    print("-"*1000)
     request = requests.get(url+str(group_id), params=params)
-    print("-"*1000)
     if request.status_code == 200:
         #print(request.json())
         return request.json()
